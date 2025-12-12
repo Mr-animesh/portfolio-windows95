@@ -24,7 +24,11 @@ import {
   Download,
   Volume2,
   VolumeX,
-  HelpCircle
+  HelpCircle,
+  BookOpen,
+  Edit3,
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 
 // --- Constants & Data ---
@@ -32,7 +36,8 @@ import {
 // Classic Windows 95/98 Icons
 const WIN_ICONS = {
   computer: 'https://win98icons.alexmeub.com/icons/png/computer_explorer-5.png',
-  recycle: 'https://win98icons.alexmeub.com/icons/png/recycle_bin_empty-4.png',
+  recycle_empty: 'https://win98icons.alexmeub.com/icons/png/recycle_bin_empty-4.png',
+  recycle_full: 'https://win98icons.alexmeub.com/icons/png/recycle_bin_full-4.png',
   notepad: 'https://win98icons.alexmeub.com/icons/png/notepad-5.png',
   network: 'https://win98icons.alexmeub.com/icons/png/connected_world-3.png',
   mail: 'https://win98icons.alexmeub.com/icons/png/outlook_express-4.png',
@@ -45,21 +50,27 @@ const WIN_ICONS = {
   tetris: 'https://win98icons.alexmeub.com/icons/png/game_solitaire-1.png', 
   winLogo: 'https://win98icons.alexmeub.com/icons/png/windows-0.png',
   // Standard Wikimedia URL for Clippy
-  clippy: 'https://upload.wikimedia.org/wikipedia/en/6/61/Clippy.png', 
+  clippy: 'https://win98icons.alexmeub.com/icons/png/msagent-3.png', 
   ie: 'https://win98icons.alexmeub.com/icons/png/msie1-0.png',
-  pdf: 'https://win98icons.alexmeub.com/icons/png/chm-4.png'
+  pdf: 'https://win98icons.alexmeub.com/icons/png/chm-4.png',
+  blog: 'https://win98icons.alexmeub.com/icons/png/write_wordpad-1.png',
+  file_generic: 'https://win98icons.alexmeub.com/icons/png/file_lines-0.png'
 };
 
 const STARTUP_SOUND = "https://upload.wikimedia.org/wikipedia/commons/6/69/Windows_95_Startup.ogg";
+const ERROR_SOUND = "https://www.myinstants.com/media/sounds/windows-error.mp3"; 
 
-const ICONS = [
+// Initial Data for Icons
+const INITIAL_ICONS = [
   { id: 'about', label: 'About_Me.txt', icon: WIN_ICONS.notepad, type: 'notepad' },
   { id: 'projects', label: 'My Projects', icon: WIN_ICONS.folder, type: 'explorer' },
+  { id: 'medium', label: 'My Blog', icon: WIN_ICONS.blog, type: 'browser' },
   { id: 'skills', label: 'My Computer', icon: WIN_ICONS.computer, type: 'system' },
   { id: 'contact', label: 'Contact', icon: WIN_ICONS.mail, type: 'mail' },
   { id: 'resume', label: 'Resume.pdf', icon: WIN_ICONS.briefcase, type: 'pdf' },
   { id: 'tetris', label: 'Tetris', icon: WIN_ICONS.tetris, type: 'tetris' },
-  { id: 'recycle', label: 'Recycle Bin', icon: WIN_ICONS.recycle, type: 'recycle' },
+  // Set initial icon to full so the bin contains the mock items by default
+  { id: 'recycle', label: 'Recycle Bin', icon: WIN_ICONS.recycle_full, type: 'recycle' },
 ];
 
 const SKILLS = [
@@ -101,6 +112,13 @@ const PROJECTS = [
     year: '2023',
     url: 'https://github.com/Mr-animesh/hospital-bed-management'
   }
+];
+
+const DELETED_ITEMS = [
+  { name: 'Bitcoin_Wallet_Keys.txt', size: '1 KB', type: 'Text Document', date: '10/24/2010' },
+  { name: 'Embarrassing_Photos.jpg', size: '2.4 MB', type: 'Image', date: '01/01/2023' },
+  { name: 'Project_Ideas_v1.doc', size: '45 KB', type: 'Word Document', date: '05/15/2024' },
+  { name: 'Spaghetti_Code.c', size: '12 KB', type: 'C Source', date: '08/20/2024' },
 ];
 
 // --- Utility Components ---
@@ -173,6 +191,83 @@ const Clippy = () => {
     </div>
   )
 }
+
+// --- Recycle Bin Component ---
+
+const RecycleBinContent = ({ onEmpty, isEmpty }) => {
+  const [items, setItems] = useState(isEmpty ? [] : DELETED_ITEMS);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const handleEmpty = () => {
+    setItems([]);
+    onEmpty();
+    alert("Recycle Bin Emptied! (The files are gone forever... just kidding, they were fake.)");
+  };
+
+  const handleRestore = () => {
+    if(selectedItem === null) return;
+    alert(`Error restoring "${items[selectedItem].name}": File is corrupted or missing 32-bit header.`);
+  };
+
+  if (items.length === 0) {
+      return (
+          <div className="bg-white h-full p-4 flex flex-col items-center justify-center">
+              <img src={WIN_ICONS.recycle_empty} alt="Empty" className="w-16 h-16 opacity-50 mb-4" />
+              <p className="text-gray-500">The Recycle Bin is empty.</p>
+          </div>
+      )
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+        {/* Menu Bar for Recycle Bin */}
+        <div className="flex gap-2 p-1 border-b border-gray-300 bg-gray-100">
+            <WinButton small onClick={handleEmpty} className="flex gap-1 items-center px-2">
+                <Trash2 size={14} /> Empty Bin
+            </WinButton>
+            <WinButton small onClick={handleRestore} disabled={selectedItem === null} className="flex gap-1 items-center px-2">
+                <RefreshCw size={14} /> Restore Item
+            </WinButton>
+        </div>
+
+        {/* List View */}
+        <div className="flex-1 overflow-auto">
+            <table className="w-full text-left text-sm border-collapse">
+                <thead className="bg-gray-100 border-b-2 border-gray-300 sticky top-0">
+                    <tr>
+                        <th className="p-1 border-r border-gray-300 font-normal">Name</th>
+                        <th className="p-1 border-r border-gray-300 font-normal">Original Location</th>
+                        <th className="p-1 border-r border-gray-300 font-normal">Date Deleted</th>
+                        <th className="p-1 border-r border-gray-300 font-normal">Type</th>
+                        <th className="p-1 font-normal">Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items.map((item, idx) => (
+                        <tr 
+                            key={idx} 
+                            onClick={() => setSelectedItem(idx)}
+                            className={`cursor-default ${selectedItem === idx ? 'bg-[#000080] text-white' : 'hover:bg-gray-100'}`}
+                        >
+                            <td className="p-1 flex items-center gap-2">
+                                <img src={WIN_ICONS.file_generic} className="w-4 h-4" alt="file" />
+                                {item.name}
+                            </td>
+                            <td className="p-1">C:\Desktop</td>
+                            <td className="p-1">{item.date}</td>
+                            <td className="p-1">{item.type}</td>
+                            <td className="p-1">{item.size}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+        <div className="border-t border-gray-300 p-1 text-xs text-gray-600 bg-gray-100">
+            {items.length} object(s)
+        </div>
+    </div>
+  );
+};
 
 // --- Resume Component ---
 
@@ -763,6 +858,82 @@ const LinkedinMock = ({ url }) => (
   </div>
 );
 
+const MediumMock = ({ url }) => (
+  <div className="flex flex-col h-full bg-white text-black overflow-auto font-serif">
+    {/* Nav */}
+    <div className="border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 bg-white z-10">
+      <div className="flex items-center gap-4">
+        <h1 className="text-3xl font-bold tracking-tighter">Medium</h1>
+        <div className="hidden md:flex gap-4 text-sm text-gray-500">
+           <span>Home</span>
+           <span>Our Story</span>
+           <span>Membership</span>
+           <span>Write</span>
+        </div>
+      </div>
+      <div className="flex gap-4 items-center">
+         <span className="text-sm hidden sm:block">Sign in</span>
+         <button className="bg-black text-white rounded-full px-4 py-2 text-sm">Get started</button>
+      </div>
+    </div>
+
+    <div className="max-w-3xl mx-auto w-full py-12 px-6">
+       <div className="flex justify-between items-start mb-12">
+          <div>
+             <h1 className="text-4xl font-bold mb-2">Animesh Jain</h1>
+             <p className="text-gray-500 mb-4">76 Followers · Computer Science Undergrad & Full Stack Developer</p>
+             <div className="flex gap-2">
+                <button className="bg-[#1a8917] text-white px-4 py-1.5 rounded-full text-sm">Follow</button>
+                <button className="bg-[#1a8917] p-1.5 rounded-full text-white"><Mail size={16}/></button>
+             </div>
+          </div>
+          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+             <Users size={40} className="text-gray-400" />
+          </div>
+       </div>
+
+       <div className="border-b border-gray-200 pb-2 mb-8 flex gap-8 text-sm text-gray-500">
+          <span className="text-black border-b border-black pb-2">Home</span>
+          <span>About</span>
+          <span>Lists</span>
+       </div>
+
+       {/* Mock Articles */}
+       <div className="space-y-12">
+          {[1, 2].map((i) => (
+             <div key={i} className="flex gap-8 items-center cursor-pointer group" onClick={() => window.open(url, '_blank')}>
+                <div className="flex-1">
+                   <div className="flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-gray-200"></div>
+                      <span className="text-xs font-sans font-bold">Animesh Jain</span>
+                      <span className="text-xs text-gray-500">· Dec {i}, 2024</span>
+                   </div>
+                   <h2 className="text-xl font-bold mb-1 group-hover:underline">Understanding WebSockets in Modern Web Apps</h2>
+                   <p className="text-gray-500 font-sans text-sm mb-4 line-clamp-2">A deep dive into real-time communication protocols and how they power applications like Chit-Chat.</p>
+                   <div className="flex justify-between items-center text-xs text-gray-500 font-sans">
+                      <div className="flex gap-2 items-center">
+                         <span className="bg-gray-100 px-2 py-1 rounded-full">Programming</span>
+                         <span>5 min read</span>
+                      </div>
+                      <BookOpen size={16} />
+                   </div>
+                </div>
+                <div className="w-24 h-24 bg-gray-100 hidden sm:block"></div>
+             </div>
+          ))}
+       </div>
+       
+       <div className="mt-12 p-8 bg-gray-50 text-center rounded-lg">
+          <h3 className="font-bold text-xl mb-2">Read more on Medium</h3>
+          <p className="text-gray-600 mb-4">Click below to visit the full profile and read all articles.</p>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors">
+             Visit Profile <ExternalLink size={16} />
+          </a>
+       </div>
+    </div>
+  </div>
+);
+
 // --- Web Browser Component ---
 
 const WebBrowser = ({ startUrl }) => {
@@ -784,6 +955,9 @@ const WebBrowser = ({ startUrl }) => {
     }
     if (url.includes('linkedin.com')) {
       return <LinkedinMock url={url} />;
+    }
+    if (url.includes('medium.com')) {
+      return <MediumMock url={url} />;
     }
     
     // Default fallback for generic URLs
@@ -1131,6 +1305,22 @@ export default function Windows95Portfolio() {
   const [time, setTime] = useState(new Date());
   const [isBooted, setIsBooted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  
+  // Icon State for Dragging
+  // Initialize lazily to avoid flash of empty desktop
+  const [desktopIcons, setDesktopIcons] = useState(() => {
+    // Basic grid logic: wrap after 6 items (approx fit for 1080p or 768p screens usually, 6*90 = 540px)
+    const ITEMS_PER_COLUMN = 6; 
+    return INITIAL_ICONS.map((icon, index) => ({
+      ...icon,
+      x: 10 + (Math.floor(index / ITEMS_PER_COLUMN) * 100), // Move to right by 100px for next column
+      y: 10 + ((index % ITEMS_PER_COLUMN) * 90) // Vertical spacing
+    }));
+  });
+  
+  const [draggedIcon, setDraggedIcon] = useState(null);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const isDrag = useRef(false);
 
   // Clock
   useEffect(() => {
@@ -1172,11 +1362,19 @@ export default function Windows95Portfolio() {
       case 'system': content = <SystemContent />; break;
       case 'mail': content = <MailContent />; break;
       case 'tetris': content = <Tetris />; break;
-      case 'recycle': content = <div className="p-4 text-center">It's empty! (Like my coffee cup)</div>; break;
+      case 'recycle': 
+        // Logic to update bin icon would go here in a real app state manager
+        content = <RecycleBinContent onEmpty={() => {
+           setDesktopIcons(prev => prev.map(icon => 
+             icon.id === 'recycle' ? { ...icon, icon: WIN_ICONS.recycle_empty } : icon
+           ));
+        }} isEmpty={desktopIcons.find(i => i.id === 'recycle')?.icon === WIN_ICONS.recycle_empty} />; 
+        break;
       case 'browser': 
         let startUrl = payload || 'https://www.google.com';
         if (id === 'github') startUrl = 'https://github.com/Mr-animesh';
         if (id === 'linkedin') startUrl = 'https://www.linkedin.com/in/animesh-jain936';
+        if (id === 'medium') startUrl = 'https://medium.com/@janimesh936';
         content = <WebBrowser startUrl={startUrl} />; 
         break;
       case 'pdf': 
@@ -1222,6 +1420,69 @@ export default function Windows95Portfolio() {
     });
   };
 
+  // --- Icon Drag Handlers ---
+  const handleIconDragStart = (e, iconId) => {
+    const icon = desktopIcons.find(i => i.id === iconId);
+    if (!icon) return;
+    
+    isDrag.current = false; // Reset drag status on start
+
+    // Calculate offset
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    
+    dragOffset.current = {
+      x: clientX - icon.x,
+      y: clientY - icon.y
+    };
+    setDraggedIcon(iconId);
+  };
+
+  const handleIconDragMove = useCallback((e) => {
+    if (!draggedIcon) return;
+    
+    isDrag.current = true; // Mark as dragging
+
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+    const newX = clientX - dragOffset.current.x;
+    const newY = clientY - dragOffset.current.y;
+
+    // Boundaries
+    const maxX = window.innerWidth - 80; // icon width approx
+    const maxY = window.innerHeight - 40 - 80; // taskbar height - icon height
+
+    let constrainedX = Math.max(0, Math.min(newX, maxX));
+    let constrainedY = Math.max(0, Math.min(newY, maxY));
+
+    setDesktopIcons(prev => prev.map(icon => 
+      icon.id === draggedIcon ? { ...icon, x: constrainedX, y: constrainedY } : icon
+    ));
+  }, [draggedIcon]);
+
+  const handleIconDragEnd = () => {
+    setDraggedIcon(null);
+    // Optional: Snap logic could be added here
+  };
+
+  // Global listeners for icon dragging
+  useEffect(() => {
+    if (draggedIcon) {
+      window.addEventListener('mousemove', handleIconDragMove);
+      window.addEventListener('mouseup', handleIconDragEnd);
+      window.addEventListener('touchmove', handleIconDragMove);
+      window.addEventListener('touchend', handleIconDragEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleIconDragMove);
+      window.removeEventListener('mouseup', handleIconDragEnd);
+      window.removeEventListener('touchmove', handleIconDragMove);
+      window.removeEventListener('touchend', handleIconDragEnd);
+    };
+  }, [draggedIcon, handleIconDragMove]);
+
+
   if (!isBooted) {
     return (
       <div className="h-[100dvh] w-screen bg-black flex flex-col items-center justify-center font-mono text-white select-none p-4">
@@ -1233,7 +1494,7 @@ export default function Windows95Portfolio() {
           <div className="w-full h-px bg-gray-600"></div>
           <p className="text-center text-sm text-gray-300">
             Microsoft Windows 95<br/>
-            © Copyright Microsoft Corp 1981-1995.
+            © Copyright Animesh 2004 - Present.
           </p>
           <button 
             onClick={handleStart}
@@ -1252,26 +1513,38 @@ export default function Windows95Portfolio() {
       
       {/* Desktop Area */}
       {/* Absolute positioning to ensure taskbar doesn't push content or get pushed */}
-      <div className="absolute top-0 left-0 right-0 bottom-10 p-2 overflow-hidden" onClick={() => setStartOpen(false)}>
-        <div className="flex flex-col flex-wrap content-start items-start h-full gap-4 w-full pb-8">
-          {ICONS.map((icon) => (
+      <div className="absolute top-0 left-0 right-0 bottom-10 overflow-hidden" onClick={() => setStartOpen(false)}>
+        
+        {/* Draggable Desktop Icons */}
+        {desktopIcons.map((icon) => (
             <div 
               key={icon.id}
-              className="flex flex-col items-center gap-1 p-2 w-[80px] cursor-pointer group hover:bg-white/10 active:bg-blue-800/50 border border-transparent hover:border-white/20 active:border-blue-900 border-dotted mb-2 z-10"
-              onDoubleClick={() => openWindow(icon.id, icon.label, icon.icon, icon.type)}
-              // Add touch support for opening icons on mobile (tap)
-              onTouchEnd={(e) => {
-                  e.preventDefault(); // Prevent double-tap zoom if any
-                  openWindow(icon.id, icon.label, icon.icon, icon.type);
+              className="absolute flex flex-col items-center gap-1 p-2 w-[80px] cursor-pointer group active:bg-blue-800/50 border border-transparent hover:border-white/20 active:border-blue-900 border-dotted mb-2 z-10"
+              style={{ left: icon.x, top: icon.y, touchAction: 'none' }}
+              onDoubleClick={() => {
+                  if (!isDrag.current) {
+                      openWindow(icon.id, icon.label, icon.icon, icon.type);
+                  }
               }}
+              onTouchEnd={(e) => {
+                  if (!draggedIcon && !isDrag.current) {
+                     e.preventDefault(); 
+                     openWindow(icon.id, icon.label, icon.icon, icon.type);
+                  }
+              }}
+              onMouseDown={(e) => handleIconDragStart(e, icon.id)}
+              onTouchStart={(e) => handleIconDragStart(e, icon.id)}
             >
-              <img src={icon.icon} alt={icon.label} className="w-8 h-8 object-contain drop-shadow-md pixelated" />
-              <span className="text-white text-xs text-center drop-shadow-md bg-[#008080] group-hover:bg-blue-900 px-1 break-words w-full leading-tight">
+              <img 
+                src={icon.id === 'recycle' && DELETED_ITEMS.length > 0 ? WIN_ICONS.recycle_full : icon.icon} 
+                alt={icon.label} 
+                className="w-8 h-8 object-contain drop-shadow-md pixelated pointer-events-none" 
+              />
+              <span className="text-white text-xs text-center drop-shadow-md bg-[#008080] group-hover:bg-blue-900 px-1 break-words w-full leading-tight pointer-events-none">
                 {icon.label}
               </span>
             </div>
-          ))}
-        </div>
+        ))}
 
         {/* Windows Layer */}
         {windows.map(w => (
@@ -1319,6 +1592,12 @@ export default function Windows95Portfolio() {
              <div className="hover:bg-[#000080] hover:text-white px-2 py-2 flex items-center gap-2 cursor-pointer border-b border-gray-400 group" onClick={() => openWindow('linkedin', 'LinkedIn', WIN_ICONS.ie, 'browser')}>
                <Linkedin size={24} className="text-black group-hover:text-white" />
                <span className="underline">L</span>inkedIn
+             </div>
+
+             {/* Blog */}
+             <div className="hover:bg-[#000080] hover:text-white px-2 py-2 flex items-center gap-2 cursor-pointer border-b border-gray-400 group" onClick={() => openWindow('medium', 'Blog', WIN_ICONS.blog, 'browser')}>
+               <img src={WIN_ICONS.blog} alt="" className="w-8 h-8" />
+               <span className="underline">B</span>log
              </div>
 
              {/* Settings */}
