@@ -1226,7 +1226,7 @@ const MailContent = () => {
     }
     
     // REPLACE THIS WITH YOUR ACTUAL EMAIL ADDRESS
-    const recipient = "janimesh936@gmail.com"; 
+    const recipient = "to.animeshjain@gmail.com"; 
     
     // Construct the email body including the sender's stated email
     const body = `From: ${fromEmail}\n\n${message}`;
@@ -1242,7 +1242,7 @@ const MailContent = () => {
 
   const copyToClipboard = () => {
     const el = document.createElement('textarea');
-    el.value = "janimesh936@gmail.com";
+    el.value = "to.animeshjain@gmail.com";
     document.body.appendChild(el);
     el.select();
     document.execCommand('copy');
@@ -1255,7 +1255,7 @@ const MailContent = () => {
       <div className="flex gap-2 items-center">
         <span className="w-16 text-right font-bold">To:</span> 
         <div className="flex-1 flex gap-2">
-            <div className="bg-white border border-gray-400 px-2 py-1 flex-1 text-gray-500 select-all">janimesh936@gmail.com</div>
+            <div className="bg-white border border-gray-400 px-2 py-1 flex-1 text-gray-500 select-all">to.animeshjain@gmail.com</div>
             <WinButton small onClick={copyToClipboard} title="Copy Email">Copy</WinButton>
         </div>
       </div>
